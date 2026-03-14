@@ -186,6 +186,9 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
     depends_on:
       - backend
       - ai-service
