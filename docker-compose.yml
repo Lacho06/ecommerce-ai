@@ -1,0 +1,207 @@
+services:
+  backend:
+    build: ./backend
+    container_name: nest_backend
+    restart: always
+    ports:
+      - "6000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - ai-service
+      - minio
+      - evolution-api
+    networks:
+      - ecommerce_net
+
+  ai-service:
+    build: ./ai-service
+    container_name: ai_microservice
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - milvus
+    networks:
+      - ecommerce_net
+
+  whatsapp-service:
+    build: ./whatsapp-service
+    container_name: whatsapp_microservice
+    restart: always
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    networks:
+      - ecommerce_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio_service
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio_data:/data
+    networks:
+      - ecommerce_net
+
+  milvus:
+    image: milvusdb/milvus:v2.3.4
+    container_name: milvus_service
+    restart: always
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    command: ["milvus", "run", "standalone"]
+    ports:
+      - "19530:19530"
+    depends_on:
+      - etcd
+      - minio
+    networks:
+      - ecommerce_net
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: milvus_etcd
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+    networks:
+      - ecommerce_net
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce_net
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    restart: always
+    networks:
+      - ecommerce_net
+
+  nginx:
+    build: ./nginx
+    container_name: nginx_gateway
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - ecommerce_net
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_automation
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=America/Mexico_City
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=strongpassword
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - ecommerce_net
+
+  evolution-postgres:
+    image: postgres:15
+    container_name: ecommerce_evolution_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${EVOLUTION_POSTGRES_DB:-evolution}
+      POSTGRES_USER: ${EVOLUTION_POSTGRES_USER:-evolution}
+      POSTGRES_PASSWORD: ${EVOLUTION_POSTGRES_PASSWORD:-evolution_secret}
+    command:
+      - postgres
+      - -c
+      - max_connections=1000
+      - -c
+      - listen_addresses=*
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce_net
+
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    container_name: evolution_api
+    restart: always
+    depends_on:
+      - redis
+      - evolution-postgres
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${EVOLUTION_POSTGRES_USER:-evolution}:${EVOLUTION_POSTGRES_PASSWORD:-evolution_secret}@evolution-postgres:5432/${EVOLUTION_POSTGRES_DB:-evolution}?schema=public
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution_ecommerce
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379/6
+      - CACHE_REDIS_PREFIX_KEY=evolution_ecommerce
+      - CACHE_LOCAL_ENABLED=false
+    volumes:
+      - evolution_instances:/evolution/instances
+    expose:
+      - "8080"
+    networks:
+      - ecommerce_net
+
+  frontend:
+    build: ./frontend
+    container_name: nextjs_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+      - ai-service
+      - whatsapp-service
+      - evolution-api
+      - minio
+    networks:
+      - ecommerce_net
+
+volumes:
+  postgres_data:
+  n8n_data:
+  minio_data:
+  evolution_instances:
+  evolution_postgres_data:
+
+networks:
+  ecommerce_net:
+    driver: bridge
