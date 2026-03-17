@@ -3,10 +3,14 @@ services:
     build: ./backend
     container_name: nest_backend
     restart: always
+    command: npm run start:dev
     ports:
-      - "6000:3000"
+      - "3001:3001"
     env_file:
       - .env
+    volumes:
+      - ./backend:/backend
+      - backend_node_modules:/backend/node_modules
     depends_on:
       - postgres
       - redis
@@ -202,13 +206,14 @@ services:
     build: ./frontend-backoffice
     container_name: nextjs_backoffice
     restart: always
+    command: npm run dev
     ports:
-      - "5173:3000"
+      - "5173:5173"
     env_file:
       - .env
     volumes:
       - ./frontend-backoffice:/app
-      - /app/node_modules
+      - backoffice_node_modules:/app/node_modules
     networks:
       - ecommerce_net
 
@@ -218,6 +223,8 @@ volumes:
   minio_data:
   evolution_instances:
   evolution_postgres_data:
+  backend_node_modules:
+  backoffice_node_modules:
 
 networks:
   ecommerce_net:

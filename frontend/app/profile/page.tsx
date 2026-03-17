@@ -1,5 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Navbar from "../components/Navbar";
+import { useAuth } from "../hooks/useAuth";
+
 const RECOMMENDED = [
   { name: "Auriculares ANC Pro", price: "$199.00", bg: "bg-gray-900" },
   { name: "Mouse Ergonómico S", price: "$45.00", bg: "bg-teal-800" },
@@ -87,40 +92,36 @@ function OrderIcon({ type }: { type: string }) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { getMe } = useAuth();
+  const [user, setUser] = useState<{ id: string; email: string; role: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMe().then((u) => {
+      if (!u) { router.push("/login"); return; }
+      setUser(u);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
-            <path d="M4 18C4 18 8 4 10 4C12 4 12 12 14 12C16 12 16 6 18 6C20 6 20 18 22 18" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M10 18C10 18 14 8 16 8C18 8 18 14 20 14C22 14 22 18 24 18" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="font-bold text-gray-900 text-base">SmartStore</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="text-gray-500 hover:text-gray-800">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M12.5 12.5L16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-          <button className="relative text-gray-500 hover:text-gray-800">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M9 1C6.24 1 4 3.24 4 6V10L2 12V13H16V12L14 10V6C14 3.24 11.76 1 9 1Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-              <path d="M7 13C7 14.1 7.9 15 9 15C10.1 15 11 14.1 11 13" stroke="currentColor" strokeWidth="1.3" />
-            </svg>
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">3</span>
-          </button>
-          <div className="w-9 h-9 rounded-full bg-orange-200 overflow-hidden">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="18" fill="#FDBA74" />
-              <circle cx="18" cy="14" r="6" fill="#FB923C" />
-              <path d="M6 32C6 26.48 11.37 22 18 22C24.63 22 30 26.48 30 32" fill="#FED7AA" />
-            </svg>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main */}
       <div className="flex-1 flex gap-6 px-8 py-8 max-w-6xl mx-auto w-full">
@@ -143,8 +144,8 @@ export default function ProfilePage() {
                 </svg>
               </button>
             </div>
-            <h2 className="font-bold text-gray-900 text-lg mt-1">Alex García</h2>
-            <p className="text-sm text-gray-400">alex.garcia@email.com</p>
+            <h2 className="font-bold text-gray-900 text-lg mt-1">{user?.name}</h2>
+            <p className="text-sm text-gray-400">{user?.email}</p>
             <span className="flex items-center gap-1.5 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full mt-1">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <circle cx="6" cy="6" r="5.5" stroke="#2563EB" strokeWidth="1" />

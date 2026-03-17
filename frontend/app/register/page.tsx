@@ -1,19 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 const CATEGORIES = ["Tecnología", "Moda", "Hogar", "Deportes", "Gaming"];
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [selected, setSelected] = useState<string[]>(["Moda", "Deportes"]);
-  const [password, setPassword] = useState("........");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const { register, isLoading, error } = useAuth();
 
   const toggleCategory = (cat: string) => {
     setSelected((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
   };
+
+  async function handleSubmit(e: { preventDefault(): void }) {
+    e.preventDefault();
+    if (password !== confirm) return;
+    await register(email, password, name);
+  }
 
   const strength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Débil", "Media", "Fuerte"][strength];
@@ -88,7 +99,7 @@ export default function RegisterPage() {
             </div>
 
             {/* App mockup */}
-            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 h-52 flex items-end justify-center px-6 pt-6">
+            <div className="rounded-2xl overflow-hidden bg-linear-to-br from-blue-100 to-blue-200 h-52 flex items-end justify-center px-6 pt-6">
               <div className="w-full bg-white rounded-t-xl shadow-lg p-4 flex flex-col gap-2">
                 <div className="flex justify-between items-center mb-1">
                   <div className="h-2.5 w-24 bg-gray-200 rounded" />
@@ -113,7 +124,14 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Crear cuenta</h2>
             <p className="text-gray-500 text-sm mb-6">Empieza tu experiencia personalizada</p>
 
-            <form className="flex flex-col gap-4">
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+              {/* Error */}
+              {error && (
+                <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
               {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -122,6 +140,9 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   placeholder="Ej. Juan Pérez"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -134,6 +155,9 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -149,6 +173,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
                       className="w-full pl-3 pr-9 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <button
@@ -170,8 +195,16 @@ export default function RegisterPage() {
                   <input
                     type="password"
                     placeholder="••••••••"
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      confirm && confirm !== password ? "border-red-300" : "border-gray-200"
+                    }`}
                   />
+                  {confirm && confirm !== password && (
+                    <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
+                  )}
                 </div>
               </div>
 
@@ -229,9 +262,20 @@ export default function RegisterPage() {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors mt-1"
+                disabled={isLoading || (!!confirm && confirm !== password)}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors mt-1 flex items-center justify-center gap-2"
               >
-                Crear mi cuenta inteligente
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Creando cuenta...
+                  </>
+                ) : (
+                  "Crear mi cuenta inteligente"
+                )}
               </button>
 
               {/* Legal */}

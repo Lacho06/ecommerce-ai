@@ -13,8 +13,8 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ name: 'full_name' })
-  fullName: string;
+  @Column()
+  name: string;
 
   @Column({ type: 'varchar', default: 'customer' })
   role: UserRole;

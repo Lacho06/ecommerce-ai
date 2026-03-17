@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AIChatModal from "./components/AIChatModal";
+import Navbar from "./components/Navbar";
 
 const PRODUCTS = [
   {
@@ -70,40 +71,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L10 6H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6H6L8 1Z" fill="white" />
-            </svg>
-          </div>
-          <span className="font-bold text-gray-900 text-base">AI-Shop</span>
-        </div>
-
-        <nav className="hidden md:flex items-center gap-7">
-          {["Shop", "Deals", "Trending", "About"].map((item) => (
-            <a key={item} href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              {item}
-            </a>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M13.5 2.5H2.5C1.95 2.5 1.5 2.95 1.5 3.5V10.5C1.5 11.05 1.95 11.5 2.5 11.5H5L8 14.5L11 11.5H13.5C14.05 11.5 14.5 11.05 14.5 10.5V3.5C14.5 2.95 14.05 2.5 13.5 2.5Z" stroke="white" strokeWidth="1.2" fill="none" />
-            </svg>
-            Connect WhatsApp
-          </button>
-          <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="6" r="3" stroke="currentColor" strokeWidth="1.4" />
-              <path d="M2 14C2 11.79 4.69 10 8 10C11.31 10 14 11.79 14 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero */}
       <section className="relative bg-linear-to-br from-[#1a1f4e] via-[#2d3480] to-[#3b4cb8] overflow-hidden">

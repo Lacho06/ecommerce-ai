@@ -13,8 +13,8 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const user = await this.usersService.create(dto.email, dto.password, dto.fullName, dto.role);
-    return this.buildResponse(user.id, user.email, user.role);
+    const user = await this.usersService.create(dto.email, dto.password, dto.name, dto.role);
+    return this.buildResponse(user.id, user.email, user.name, user.role);
   }
 
   async login(dto: LoginDto) {
@@ -24,11 +24,11 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales inválidas');
 
-    return this.buildResponse(user.id, user.email, user.role);
+    return this.buildResponse(user.id, user.email, user.name, user.role);
   }
 
-  private buildResponse(id: string, email: string, role: string) {
-    const token = this.jwtService.sign({ sub: id, email, role });
+  private buildResponse(id: string, email: string, name: string, role: string) {
+    const token = this.jwtService.sign({ sub: id, email, name, role });
     return { access_token: token, token_type: 'Bearer' };
   }
 }
