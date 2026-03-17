@@ -206,9 +206,8 @@ services:
     build: ./frontend-backoffice
     container_name: nextjs_backoffice
     restart: always
-    command: npm run dev
     ports:
-      - "5173:5173"
+      - "5173:3000"
     env_file:
       - .env
     volumes:
