@@ -4,13 +4,10 @@ import Badge from "@/components/ui/badge/Badge";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  BoltIcon,
-  ChatIcon,
-  CheckCircleIcon,
   HorizontaLDots,
   PaperPlaneIcon,
-  TimeIcon,
 } from "@/icons";
+import { BrainCircuit, Workflow, MessageSquare, Timer, ArrowLeftRight, BadgeAlert, Cpu } from 'lucide-react'
 
 const STATS = [
   {
@@ -18,28 +15,28 @@ const STATS = [
     value: "94.2%",
     change: "+2.4%",
     changeType: "success" as const,
-    icon: <CheckCircleIcon className="size-5 text-brand-500" />,
+    icon: <BrainCircuit className="text-brand-500" />,
   },
   {
     label: "Active n8n Workflows",
     value: "12 / 12",
     change: "Stable",
     changeType: "light" as const,
-    icon: <BoltIcon className="size-5 text-brand-500" />,
+    icon: <Workflow className="text-brand-500" />,
   },
   {
     label: "WhatsApp Msg Volume",
     value: "1,284",
     change: "+15%",
     changeType: "success" as const,
-    icon: <ChatIcon className="size-5 text-brand-500" />,
+    icon: <MessageSquare className="text-brand-500" />,
   },
   {
     label: "AI Response Time",
     value: "0.8s",
     change: "-1.2m",
     changeType: "error" as const,
-    icon: <TimeIcon className="size-5 text-brand-500" />,
+    icon: <Timer className="text-brand-500" />,
   },
 ];
 
@@ -86,30 +83,19 @@ const AUTOMATIONS = [
   {
     label: "INVENTORY SYNC",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M3 6L9 3L15 6V12L9 15L3 12V6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M3 6L9 9M9 9L15 6M9 9V15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
+      <ArrowLeftRight className="text-brand-500" />
     ),
   },
   {
     label: "ORDER ALERTS",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="5" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M2 8.5L9 12L16 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M6 5V4C6 2.9 6.9 2 8 2H10C11.1 2 12 2.9 12 4V5" stroke="currentColor" strokeWidth="1.4" />
-      </svg>
+      <BadgeAlert className="text-brand-500" />
     ),
   },
   {
     label: "AI PROCESSING",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="5" y="3" width="8" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M3 7H5M3 11H5M13 7H15M13 11H15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M8 6H10M8 9H10M8 12H10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
+      <Cpu className="text-brand-500" />
     ),
   },
 ];
@@ -341,7 +327,7 @@ export default function AIDashboard() {
             className="flex-1 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-600 bg-transparent outline-none"
           />
           <button className="flex items-center justify-center w-8 h-8 bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors shrink-0">
-            <PaperPlaneIcon className="size-4 text-white" />
+            <PaperPlaneIcon className="text-white" />
           </button>
         </div>
       </div>
