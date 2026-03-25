@@ -6,26 +6,54 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
 import Switch from "@/components/form/switch/Switch";
-import { CheckCircleIcon, BoltIcon } from "@/icons";
-import { ArrowLeftIcon } from 'lucide-react'
+import { BoltIcon } from "@/icons";
+import { ArrowLeftIcon, Info, Banknote, ChartSpline, Sparkle, Layers, Image, Rocket } from 'lucide-react';
 import { useDropzone } from "react-dropzone";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 const CATEGORIES = [
-  { value: "electronics", label: "Electronics" },
-  { value: "furniture", label: "Furniture" },
-  { value: "home-decor", label: "Home Decor" },
-  { value: "clothing", label: "Clothing" },
-  { value: "sports", label: "Sports" },
+  { value: "Electronics", label: "Electronics" },
+  { value: "Furniture", label: "Furniture" },
+  { value: "Home Decor", label: "Home Decor" },
+  { value: "Clothing", label: "Clothing" },
+  { value: "Sports", label: "Sports" },
 ];
 
 const SUGGESTED_TAGS = ["Premium", "Wireless", "High Fidelity", "Bluetooth", "Pro"];
 
+interface FormState {
+  name: string;
+  sku: string;
+  brand: string;
+  categoryName: string;
+  basePrice: string;
+  salePrice: string;
+  costPerItem: string;
+  stock: string;
+}
+
 export default function ProductCreatePage() {
+  const router = useRouter();
+
+  const [form, setForm] = useState<FormState>({
+    name: "",
+    sku: "",
+    brand: "",
+    categoryName: "Electronics",
+    basePrice: "",
+    salePrice: "",
+    costPerItem: "",
+    stock: "",
+  });
   const [description, setDescription] = useState("");
   const [dynamicPricing, setDynamicPricing] = useState(true);
-  const [tags, setTags] = useState<string[]>(["Premium", "Wireless", "High Fidelity"]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [health] = useState(75);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -33,8 +61,52 @@ export default function ProductCreatePage() {
     onDrop: (files) => console.log("Files dropped:", files),
   });
 
+  const setField = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
   const toggleTag = (tag: string) =>
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!form.name || !form.sku || !form.brand || !form.basePrice || !form.costPerItem || !form.stock) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          sku: form.sku,
+          brand: form.brand,
+          categoryName: form.categoryName || undefined,
+          basePrice: parseFloat(form.basePrice),
+          salePrice: form.salePrice ? parseFloat(form.salePrice) : undefined,
+          costPerItem: parseFloat(form.costPerItem),
+          stock: parseInt(form.stock, 10),
+          dynamicPricing,
+          description: description || undefined,
+          tagNames: tags.length ? tags : undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message ?? `Error ${res.status}`);
+      }
+
+      router.push("/products");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Circle stroke for health score
   const radius = 52;
@@ -59,15 +131,21 @@ export default function ProductCreatePage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+      {error && (
+        <div className="px-4 py-3 rounded-xl bg-error-50 border border-error-200 text-error-600 text-sm dark:bg-error-500/10 dark:border-error-500/20 dark:text-error-400">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-12 gap-5">
         {/* ── Left column ── */}
-        <div className="flex flex-col gap-5 flex-1 min-w-0">
+        <div className="flex flex-col gap-5 col-span-9">
 
           {/* Basic Info */}
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-                <BoltIcon className="size-4 text-brand-500" />
+                <Info className="text-brand-500 size-4" />
               </div>
               <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">Basic Info</h2>
             </div>
@@ -79,17 +157,31 @@ export default function ProductCreatePage() {
                   id="product-name"
                   type="text"
                   placeholder="e.g. Premium Wireless Headphones"
+                  value={form.name}
+                  onChange={setField("name")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="sku">SKU</Label>
-                  <Input id="sku" type="text" placeholder="WH-001-PRO" />
+                  <Input
+                    id="sku"
+                    type="text"
+                    placeholder="WH-001-PRO"
+                    value={form.sku}
+                    onChange={setField("sku")}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="brand">Brand</Label>
-                  <Input id="brand" type="text" placeholder="AudioTech" />
+                  <Input
+                    id="brand"
+                    type="text"
+                    placeholder="AudioTech"
+                    value={form.brand}
+                    onChange={setField("brand")}
+                  />
                 </div>
               </div>
 
@@ -97,9 +189,9 @@ export default function ProductCreatePage() {
                 <Label htmlFor="category">Category</Label>
                 <Select
                   options={CATEGORIES}
-                  placeholder="Electronics"
-                  onChange={() => {}}
-                  defaultValue="electronics"
+                  placeholder="Select a category"
+                  defaultValue={form.categoryName}
+                  onChange={(val) => setForm((prev) => ({ ...prev, categoryName: val }))}
                 />
               </div>
             </div>
@@ -110,14 +202,14 @@ export default function ProductCreatePage() {
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-                  <CheckCircleIcon className="size-4 text-brand-500" />
+                  <Banknote className="text-brand-500 size-4" />
                 </div>
                 <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">
                   Pricing & Stock
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                <BoltIcon className="size-3.5 text-brand-500" />
+                <BoltIcon className="text-brand-500 size-3.5" />
                 <span className="text-xs font-medium text-brand-500">
                   Dynamic Pricing Powered by AI
                 </span>
@@ -133,19 +225,43 @@ export default function ProductCreatePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="base-price">Base Price</Label>
-                <Input id="base-price" type="number" placeholder="0.00" />
+                <Input
+                  id="base-price"
+                  type="number"
+                  placeholder="0.00"
+                  value={form.basePrice}
+                  onChange={setField("basePrice")}
+                />
               </div>
               <div>
                 <Label htmlFor="sale-price">Sale Price (Optional)</Label>
-                <Input id="sale-price" type="number" placeholder="0.00" />
+                <Input
+                  id="sale-price"
+                  type="number"
+                  placeholder="0.00"
+                  value={form.salePrice}
+                  onChange={setField("salePrice")}
+                />
               </div>
               <div>
                 <Label htmlFor="cost">Cost per item</Label>
-                <Input id="cost" type="number" placeholder="0.00" />
+                <Input
+                  id="cost"
+                  type="number"
+                  placeholder="0.00"
+                  value={form.costPerItem}
+                  onChange={setField("costPerItem")}
+                />
               </div>
               <div>
                 <Label htmlFor="stock">Initial Stock</Label>
-                <Input id="stock" type="number" placeholder="100" />
+                <Input
+                  id="stock"
+                  type="number"
+                  placeholder="100"
+                  value={form.stock}
+                  onChange={setField("stock")}
+                />
               </div>
             </div>
           </div>
@@ -154,11 +270,7 @@ export default function ProductCreatePage() {
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <div className="flex items-center gap-2 mb-5">
               <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-brand-500">
-                  <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
-                  <path d="M1 9l3-3 2.5 2.5L10 5l3 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="4.5" cy="4.5" r="1" fill="currentColor" />
-                </svg>
+                <Image className="text-brand-500 size-4" />
               </div>
               <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">Media</h2>
             </div>
@@ -200,9 +312,7 @@ export default function ProductCreatePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-brand-500">
-                    <path d="M1 4h12M1 10h12M5 1v12M9 1v12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
+                  <Layers className="text-brand-500 size-4" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">
@@ -227,17 +337,24 @@ export default function ProductCreatePage() {
             <Link href="/products">
               <Button variant="outline" size="md">Cancel</Button>
             </Link>
-            <Button variant="primary" size="md">Save Product</Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Product"}
+            </Button>
           </div>
         </div>
 
         {/* ── Right column ── */}
-        <div className="flex flex-col gap-5 w-full lg:w-72 shrink-0">
+        <div className="flex flex-col gap-5 col-span-3">
 
           {/* Product Health Score */}
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BoltIcon className="size-4 text-brand-500" />
+              <ChartSpline className="text-brand-500 size-4" />
               <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">
                 Product Health Score
               </h2>
@@ -281,7 +398,7 @@ export default function ProductCreatePage() {
           {/* AI Assistant */}
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BoltIcon className="size-4 text-brand-500" />
+              <Sparkle className="text-brand-500 size-4" />
               <h2 className="text-sm font-semibold text-gray-800 dark:text-white/90">
                 AI Assistant
               </h2>
@@ -294,15 +411,11 @@ export default function ProductCreatePage() {
               onChange={setDescription}
             />
 
-            <div className="flex items-center gap-2 mt-3">
+            <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="primary" size="sm" startIcon={<BoltIcon className="size-3.5" />}>
                 Generate
               </Button>
-              <Button variant="outline" size="sm" startIcon={
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M2 11L11 2M2 2l9 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                </svg>
-              }>
+              <Button variant="outline" size="sm" startIcon={<Rocket className="size-3.5" />}>
                 Optimize SEO
               </Button>
             </div>

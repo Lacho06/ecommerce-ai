@@ -1,5 +1,8 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { Category } from '../categories/category.entity';
+import { Product } from '../products/product.entity';
+import { Tag } from '../tags/tag.entity';
 import { User } from '../users/user.entity';
 
 const AppDataSource = new DataSource({
@@ -9,7 +12,7 @@ const AppDataSource = new DataSource({
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  entities: [User],
+  entities: [User, Product, Category, Tag],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });

@@ -11,6 +11,7 @@ import {
   HorizontaLDots,
 } from "@/icons";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CalendarCheck2, Sparkles, Banknote, Plus, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -131,6 +132,7 @@ const PER_PAGE = 4;
 const TOTAL_PAGES = Math.ceil(TOTAL / PER_PAGE);
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [selected, setSelected] = useState<number[]>([]);
   const [page, setPage] = useState(1);
 
@@ -158,7 +160,7 @@ export default function ProductsPage() {
           <Button variant="outline" size="sm" startIcon={<Download className="w-4 h-4" />}>
             Export
           </Button>
-          <Button variant="primary" size="sm" startIcon={<Plus className="w-4 h-4" />}>
+          <Button variant="primary" size="sm" startIcon={<Plus className="w-4 h-4" />} onClick={() => router.push("/products/create")}>
             Add Product
           </Button>
         </div>
