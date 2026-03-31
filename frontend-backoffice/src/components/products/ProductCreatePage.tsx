@@ -12,8 +12,9 @@ import { useDropzone } from "react-dropzone";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
+import { AxiosError } from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 const CATEGORIES = [
   { value: "Electronics", label: "Electronics" },
@@ -38,7 +39,6 @@ interface FormState {
 
 export default function ProductCreatePage() {
   const router = useRouter();
-
   const [form, setForm] = useState<FormState>({
     name: "",
     sku: "",
@@ -77,32 +77,28 @@ export default function ProductCreatePage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/products`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          sku: form.sku,
-          brand: form.brand,
-          categoryName: form.categoryName || undefined,
-          basePrice: parseFloat(form.basePrice),
-          salePrice: form.salePrice ? parseFloat(form.salePrice) : undefined,
-          costPerItem: parseFloat(form.costPerItem),
-          stock: parseInt(form.stock, 10),
-          dynamicPricing,
-          description: description || undefined,
-          tagNames: tags.length ? tags : undefined,
-        }),
+      await api.post("/products", {
+        name: form.name,
+        sku: form.sku,
+        brand: form.brand,
+        categoryName: form.categoryName || undefined,
+        basePrice: parseFloat(form.basePrice),
+        salePrice: form.salePrice ? parseFloat(form.salePrice) : undefined,
+        costPerItem: parseFloat(form.costPerItem),
+        stock: parseInt(form.stock, 10),
+        dynamicPricing,
+        description: description || undefined,
+        tagNames: tags.length ? tags : undefined,
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.message ?? `Error ${res.status}`);
-      }
 
       router.push("/products");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      if (err instanceof AxiosError) {
+        const msg = err.response?.data?.message;
+        setError(Array.isArray(msg) ? msg[0] : (msg ?? `Error ${err.response?.status}`));
+      } else {
+        setError("Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }
