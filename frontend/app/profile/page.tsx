@@ -73,7 +73,7 @@ const ADDRESSES = [
 export default function ProfilePage() {
   const router = useRouter();
   const { getMe } = useAuth();
-  const [user, setUser] = useState<{ id: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState(1);

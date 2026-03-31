@@ -6,6 +6,7 @@ import { useState } from "react";
 interface AuthUser {
   id: string;
   email: string;
+  name: string;
   role: string;
 }
 
