@@ -33,15 +33,11 @@ export class CreateProductDto {
   @Type(() => Number)
   salePrice?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  costPerItem: number;
-
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  stock: number;
+  initialStock?: number;
 
   @IsOptional()
   @IsBoolean()

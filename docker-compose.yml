@@ -216,6 +216,17 @@ services:
     networks:
       - ecommerce_net
 
+  adminer:
+    image: adminer:4.8.1
+    container_name: adminer
+    restart: always
+    ports:
+      - "5050:8080"
+    depends_on:
+      - postgres
+    networks:
+      - ecommerce_net
+
 volumes:
   postgres_data:
   n8n_data:

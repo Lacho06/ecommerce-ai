@@ -1,0 +1,594 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0001-0000-0000-000000000000",
+    "name": "Ecommerce AI API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "id": "folder-auth",
+      "name": "Auth",
+      "item": [
+        {
+          "id": "req-auth-register",
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"12345678\",\n  \"role\": \"admin\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-auth-login",
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.access_token) {",
+                  "  pm.collectionVariables.set('token', res.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"12345678\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-auth-me",
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-products",
+      "name": "Products",
+      "item": [
+        {
+          "id": "req-products-get-all",
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&perPage=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "perPage", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "id": "req-products-get-one",
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "id": "req-products-create",
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto Test\",\n  \"sku\": \"SKU-001\",\n  \"brand\": \"Nike\",\n  \"categoryName\": \"Ropa\",\n  \"basePrice\": 199.99,\n  \"salePrice\": 149.99,\n  \"initialStock\": 50,\n  \"dynamicPricing\": false,\n  \"description\": \"Descripción del producto\",\n  \"tagNames\": [\"nuevo\", \"oferta\"]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-inventory",
+      "name": "Inventory",
+      "item": [
+        {
+          "id": "req-inventory-get-by-product",
+          "name": "Get Inventory by Product",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/inventory/product/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "product", ":productId"],
+              "variable": [{ "key": "productId", "value": "" }]
+            }
+          }
+        },
+        {
+          "id": "req-inventory-update",
+          "name": "Update Inventory",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remaining\": 40,\n  \"available\": 1\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-images",
+      "name": "Images",
+      "item": [
+        {
+          "id": "req-images-upload",
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["images"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://cdn.example.com/product.jpg\",\n  \"imageableId\": \"<uuid-del-producto>\",\n  \"imageableType\": \"product\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-images-get-by-entity",
+          "name": "Get Images by Entity",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/images/:type/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["images", ":type", ":id"],
+              "variable": [
+                { "key": "type", "value": "product" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "id": "req-images-delete",
+          "name": "Delete Image",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/images/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["images", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-categories",
+      "name": "Categories",
+      "item": [
+        {
+          "id": "req-categories-get-all",
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-tags",
+      "name": "Tags",
+      "item": [
+        {
+          "id": "req-tags-get-all",
+          "name": "Get All Tags",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["tags"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-payforms",
+      "name": "Payforms",
+      "item": [
+        {
+          "id": "req-payforms-get-active",
+          "name": "Get Active Payforms",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/payforms",
+              "host": ["{{baseUrl}}"],
+              "path": ["payforms"]
+            }
+          }
+        },
+        {
+          "id": "req-payforms-get-all",
+          "name": "Get All Payforms (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/payforms/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["payforms", "all"]
+            }
+          }
+        },
+        {
+          "id": "req-payforms-create",
+          "name": "Create Payform",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payforms",
+              "host": ["{{baseUrl}}"],
+              "path": ["payforms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tarjeta de crédito\",\n  \"code\": \"card\",\n  \"provider\": \"mastercard\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "id": "req-payforms-toggle",
+          "name": "Toggle Payform Active",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/payforms/:id/toggle",
+              "host": ["{{baseUrl}}"],
+              "path": ["payforms", ":id", "toggle"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-user-addresses",
+      "name": "User Addresses",
+      "item": [
+        {
+          "id": "req-addresses-get-my",
+          "name": "Get My Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/user-addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-addresses"]
+            }
+          }
+        },
+        {
+          "id": "req-addresses-create",
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user-addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-addresses"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Casa\",\n  \"recipientName\": \"Juan Pérez\",\n  \"street\": \"Av. de la Reforma 222, Torre A, Piso 10\",\n  \"city\": \"Cuauhtémoc\",\n  \"state\": \"CDMX\",\n  \"postalCode\": \"06600\",\n  \"country\": \"MX\",\n  \"phone\": \"+52 55 1234 5678\",\n  \"isDefault\": true\n}"
+            }
+          }
+        },
+        {
+          "id": "req-addresses-delete",
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/user-addresses/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-addresses", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-orders",
+      "name": "Orders",
+      "item": [
+        {
+          "id": "req-orders-create",
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productId\": \"<uuid-producto>\", \"quantity\": 1 },\n    { \"productId\": \"<uuid-producto-2>\", \"quantity\": 2 }\n  ],\n  \"payformId\": \"<uuid-payform>\",\n  \"lastFour\": \"4242\",\n  \"shipping\": {\n    \"recipientName\": \"Juan Pérez\",\n    \"street\": \"Av. de la Reforma 222, Torre A, Piso 10\",\n    \"city\": \"Cuauhtémoc\",\n    \"state\": \"CDMX\",\n    \"postalCode\": \"06600\",\n    \"country\": \"MX\",\n    \"phone\": \"+52 55 1234 5678\",\n    \"shippingMethod\": \"standard\"\n  },\n  \"shippingCost\": 0,\n  \"tax\": 18.31,\n  \"notes\": \"Llamar antes de entregar\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-orders-get-my",
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/orders/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "my"]
+            }
+          }
+        },
+        {
+          "id": "req-orders-get-all",
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&perPage=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "perPage", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "id": "req-orders-get-one",
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "id": "req-orders-update-status",
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id", "status"],
+              "variable": [{ "key": "id", "value": "" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"note\": \"Pago verificado\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-currencies",
+      "name": "Currencies",
+      "item": [
+        {
+          "id": "req-currencies-create",
+          "name": "Create Currency",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"MXN\",\n  \"name\": \"Peso Mexicano\",\n  \"symbol\": \"$\",\n  \"decimalPlaces\": 2,\n  \"isDefault\": false\n}"
+            }
+          }
+        },
+        {
+          "id": "req-currencies-get-active",
+          "name": "Get Active Currencies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/currencies",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies"]
+            }
+          }
+        },
+        {
+          "id": "req-currencies-get-all",
+          "name": "Get All Currencies (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies", "all"]
+            }
+          }
+        },
+        {
+          "id": "req-currencies-toggle",
+          "name": "Toggle Currency Active",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/:id/toggle",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies", ":id", "toggle"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "id": "req-exchange-rates-create",
+          "name": "Create Exchange Rate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/currencies/exchange-rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies", "exchange-rates"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromCurrencyId\": \"<uuid-usd>\",\n  \"toCurrencyId\": \"<uuid-mxn>\",\n  \"rate\": 17.15,\n  \"effectiveDate\": \"2026-04-04\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-exchange-rates-get-latest",
+          "name": "Get Latest Rate",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/currencies/exchange-rates/:from/:to",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies", "exchange-rates", ":from", ":to"],
+              "variable": [
+                { "key": "from", "value": "USD" },
+                { "key": "to", "value": "MXN" }
+              ]
+            }
+          }
+        },
+        {
+          "id": "req-currencies-convert",
+          "name": "Convert Amount",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/currencies/convert?from=USD&to=MXN&amount=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["currencies", "convert"],
+              "query": [
+                { "key": "from", "value": "USD" },
+                { "key": "to", "value": "MXN" },
+                { "key": "amount", "value": "100" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

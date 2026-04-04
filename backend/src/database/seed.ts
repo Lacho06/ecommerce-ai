@@ -1,16 +1,14 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { Currency } from '../currencies/currency.entity';
 import { User } from '../users/user.entity';
 import { seedAdmin } from './seeds/admin.seed';
+import { seedCurrencies } from './seeds/currencies.seed';
+import { baseDataSourceOptions } from './data-source';
 
 const dataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.POSTGRES_HOST ?? 'postgres',
-  port: parseInt(process.env.POSTGRES_PORT ?? '5432'),
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
-  entities: [User],
+  ...baseDataSourceOptions,
+  entities: [User, Currency],
   synchronize: false,
 });
 
@@ -19,6 +17,7 @@ async function main() {
   console.log('🔌 Conectado a la base de datos');
 
   await seedAdmin(dataSource);
+  await seedCurrencies(dataSource);
 
   await dataSource.destroy();
   console.log('🏁 Seed finalizado');

@@ -4,10 +4,12 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { Inventory } from '../inventory/inventory.entity';
 import { Tag } from '../tags/tag.entity';
 
 @Entity('products')
@@ -30,11 +32,8 @@ export class Product {
   @Column({ type: 'numeric', precision: 10, scale: 2, nullable: true })
   salePrice: number | null;
 
-  @Column({ type: 'numeric', precision: 10, scale: 2 })
-  costPerItem: number;
-
-  @Column({ type: 'int', default: 0 })
-  stock: number;
+  @OneToOne(() => Inventory, (inventory) => inventory.product, { eager: true })
+  inventory: Inventory;
 
   @Column({ default: false })
   dynamicPricing: boolean;

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductsService } from './products.service';
@@ -14,8 +14,11 @@ export class ProductsController {
 
   @Public()
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(
+    @Query('page') page = '1',
+    @Query('perPage') perPage = '10',
+  ) {
+    return this.productsService.findAll(Number(page), Number(perPage));
   }
 
   @Public()
