@@ -12,8 +12,9 @@ import {
 } from "@/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalendarCheck2, Sparkles, Banknote, Plus, Download, ChevronLeft, ChevronRight } from 'lucide-react'
+import { usePagination } from "@/hooks/usePagination";
 
 const STATS = [
   {
@@ -49,7 +50,7 @@ const STATS = [
 
 type AIStatus = "Optimized" | "Pending Generation" | "Not Enabled";
 
-const PRODUCTS: {
+type Product = {
   id: number;
   name: string;
   sku: string;
@@ -59,52 +60,54 @@ const PRODUCTS: {
   lowStock: boolean;
   price: string;
   aiStatus: AIStatus;
-}[] = [
-  {
-    id: 1,
-    name: "SoundMax Wireless Pro",
-    sku: "SKU: SM-PRO-2024",
-    image: "/images/product/product-01.jpg",
-    category: "Electronics",
-    stock: 84,
-    lowStock: false,
-    price: "$129.99",
-    aiStatus: "Optimized",
-  },
-  {
-    id: 2,
-    name: "ComfortCurve Ergonomic Chair",
-    sku: "SKU: FURN-CC-X1",
-    image: "/images/product/product-02.jpg",
-    category: "Furniture",
-    stock: 3,
-    lowStock: true,
-    price: "$349.00",
-    aiStatus: "Pending Generation",
-  },
-  {
-    id: 3,
-    name: "Nordic Ceramic Planter Set",
-    sku: "SKU: HOME-NC-03",
-    image: "/images/product/product-03.jpg",
-    category: "Home Decor",
-    stock: 152,
-    lowStock: false,
-    price: "$45.00",
-    aiStatus: "Optimized",
-  },
-  {
-    id: 4,
-    name: "ActiveSync Watch Series 4",
-    sku: "SKU: TECH-ASW4-B",
-    image: "/images/product/product-04.jpg",
-    category: "Electronics",
-    stock: 12,
-    lowStock: false,
-    price: "$199.99",
-    aiStatus: "Not Enabled",
-  },
-];
+}
+
+// const PRODUCTS: Product[] = [
+//   {
+//     id: 1,
+//     name: "SoundMax Wireless Pro",
+//     sku: "SKU: SM-PRO-2024",
+//     image: "/images/product/product-01.jpg",
+//     category: "Electronics",
+//     stock: 84,
+//     lowStock: false,
+//     price: "$129.99",
+//     aiStatus: "Optimized",
+//   },
+//   {
+//     id: 2,
+//     name: "ComfortCurve Ergonomic Chair",
+//     sku: "SKU: FURN-CC-X1",
+//     image: "/images/product/product-02.jpg",
+//     category: "Furniture",
+//     stock: 3,
+//     lowStock: true,
+//     price: "$349.00",
+//     aiStatus: "Pending Generation",
+//   },
+//   {
+//     id: 3,
+//     name: "Nordic Ceramic Planter Set",
+//     sku: "SKU: HOME-NC-03",
+//     image: "/images/product/product-03.jpg",
+//     category: "Home Decor",
+//     stock: 152,
+//     lowStock: false,
+//     price: "$45.00",
+//     aiStatus: "Optimized",
+//   },
+//   {
+//     id: 4,
+//     name: "ActiveSync Watch Series 4",
+//     sku: "SKU: TECH-ASW4-B",
+//     image: "/images/product/product-04.jpg",
+//     category: "Electronics",
+//     stock: 12,
+//     lowStock: false,
+//     price: "$199.99",
+//     aiStatus: "Not Enabled",
+//   },
+// ];
 
 const AI_STATUS_CONFIG: Record<
   AIStatus,
@@ -127,14 +130,14 @@ const AI_STATUS_CONFIG: Record<
   },
 };
 
-const TOTAL = 1240;
-const PER_PAGE = 4;
-const TOTAL_PAGES = Math.ceil(TOTAL / PER_PAGE);
-
 export default function ProductsPage() {
   const router = useRouter();
+  const { data: products = [], fetchData, page, perPage, goToPage, goPrev, goNext, total, totalPages, loading, error } = usePagination<Product>({ initialPage: 1, perPage: 4 });
   const [selected, setSelected] = useState<number[]>([]);
-  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    fetchData('/products');
+  }, [fetchData]);
 
   const toggleSelect = (id: number) =>
     setSelected((prev) =>
@@ -142,7 +145,7 @@ export default function ProductsPage() {
     );
 
   const toggleAll = () =>
-    setSelected(selected.length === PRODUCTS.length ? [] : PRODUCTS.map((p) => p.id));
+    setSelected(selected.length === products.length ? [] : products.map((p) => p.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -232,7 +235,7 @@ export default function ProductsPage() {
                 <th className="px-5 py-3 w-10">
                   <input
                     type="checkbox"
-                    checked={selected.length === PRODUCTS.length}
+                    checked={selected.length === products.length}
                     onChange={toggleAll}
                     className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-brand-500"
                   />
@@ -250,7 +253,7 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {PRODUCTS.map((p) => {
+              {products.map((p) => {
                 const ai = AI_STATUS_CONFIG[p.aiStatus];
                 return (
                   <tr
@@ -327,8 +330,8 @@ export default function ProductsPage() {
 
                     {/* AI Description */}
                     <td className="px-5 py-4">
-                      <Badge color={ai.color} size="sm" startIcon={ai.icon}>
-                        {ai.label}
+                      <Badge color={ai?.color ?? ''} size="sm" startIcon={ai?.icon ?? ''}>
+                        {ai?.label ?? ''}
                       </Badge>
                     </td>
 
@@ -346,41 +349,45 @@ export default function ProductsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-gray-800">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {(page - 1) * PER_PAGE + 1} to{" "}
-            {Math.min(page * PER_PAGE, TOTAL)} of {TOTAL.toLocaleString()} results
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            {[1, 2, 3].map((n) => (
-              <button
-                key={n}
-                onClick={() => setPage(n)}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                  page === n
-                    ? "bg-brand-500 text-white"
-                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(TOTAL_PAGES, p + 1))}
-              disabled={page === TOTAL_PAGES}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
-        </div>
+        {
+          (total > 0 || loading || error) && (
+            <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-gray-800">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Showing {(page - 1) * perPage + 1} to{" "}
+                {Math.min(page * perPage, total)} of {total.toLocaleString()} results
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => goPrev()}
+                  disabled={page === 1}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                {Array(totalPages).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToPage(index)}
+                    className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                      page === index
+                        ? "bg-brand-500 text-white"
+                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => goNext()}
+                  disabled={page === totalPages}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+            </div>
+          )
+        }
       </div>
     </div>
   );

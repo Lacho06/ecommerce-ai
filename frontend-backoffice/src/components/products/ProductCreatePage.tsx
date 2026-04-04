@@ -56,10 +56,22 @@ export default function ProductCreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [health] = useState(75);
 
+  const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "image/png": [], "image/jpeg": [], "video/mp4": [] },
-    onDrop: (files) => console.log("Files dropped:", files),
+    onDrop: (files) => {
+      const newPreviews = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
+      setPreviews((prev) => [...prev, ...newPreviews]);
+    },
   });
+
+  const removePreview = (index: number) => {
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[index].url);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const setField = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -76,32 +88,32 @@ export default function ProductCreatePage() {
     }
 
     setLoading(true);
-    try {
-      await api.post("/products", {
-        name: form.name,
-        sku: form.sku,
-        brand: form.brand,
-        categoryName: form.categoryName || undefined,
-        basePrice: parseFloat(form.basePrice),
-        salePrice: form.salePrice ? parseFloat(form.salePrice) : undefined,
-        costPerItem: parseFloat(form.costPerItem),
-        stock: parseInt(form.stock, 10),
-        dynamicPricing,
-        description: description || undefined,
-        tagNames: tags.length ? tags : undefined,
-      });
+    // try {
+    //   await api.post("/products", {
+    //     name: form.name,
+    //     sku: form.sku,
+    //     brand: form.brand,
+    //     categoryName: form.categoryName || undefined,
+    //     basePrice: parseFloat(form.basePrice),
+    //     salePrice: form.salePrice ? parseFloat(form.salePrice) : undefined,
+    //     costPerItem: parseFloat(form.costPerItem),
+    //     stock: parseInt(form.stock, 10),
+    //     dynamicPricing,
+    //     description: description || undefined,
+    //     tagNames: tags.length ? tags : undefined,
+    //   });
 
-      router.push("/products");
-    } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        const msg = err.response?.data?.message;
-        setError(Array.isArray(msg) ? msg[0] : (msg ?? `Error ${err.response?.status}`));
-      } else {
-        setError("Something went wrong.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    //   router.push("/products");
+    // } catch (err: unknown) {
+    //   if (err instanceof AxiosError) {
+    //     const msg = err.response?.data?.message;
+    //     setError(Array.isArray(msg) ? msg[0] : (msg ?? `Error ${err.response?.status}`));
+    //   } else {
+    //     setError("Something went wrong.");
+    //   }
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   // Circle stroke for health score
@@ -280,26 +292,53 @@ export default function ProductCreatePage() {
               }`}
             >
               <input {...getInputProps()} />
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-sm">
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                  <path d="M11 14V4M11 4L7 8M11 4l4 4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M3 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {isDragActive ? "Drop files here" : "Drag and drop images or videos"}
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  PNG, JPG, MP4 up to 50MB
-                </p>
-              </div>
-              <button
-                type="button"
-                className="px-4 py-2 text-xs font-medium text-brand-500 border border-brand-300 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
-              >
-                Browse Files
-              </button>
+              {
+                previews.length <= 0 && (
+                  <>
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-sm">
+                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path d="M11 14V4M11 4L7 8M11 4l4 4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M3 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {isDragActive ? "Drop files here" : "Drag and drop images or videos"}
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        PNG, JPG, MP4 up to 50MB
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="px-4 py-2 text-xs font-medium text-brand-500 border border-brand-300 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
+                    >
+                      Browse Files
+                    </button>
+                  </>
+                )
+              }
+
+              {previews.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-1">
+                  {previews.map((preview, index) => (
+                    <div key={index} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                      {preview.file.type.startsWith("video/") ? (
+                        <video src={preview.url} className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={preview.url} alt={preview.file.name} className="w-full h-full object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removePreview(index); }}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <span className="text-white text-lg leading-none">×</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
