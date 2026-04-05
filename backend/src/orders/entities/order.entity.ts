@@ -50,6 +50,15 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
+  @Column({ name: 'currency_code', length: 3 })
+  currencyCode: string;
+
+  @Column({ name: 'currency_name' })
+  currencyName: string;
+
+  @Column({ name: 'currency_symbol', length: 5 })
+  currencySymbol: string;
+
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true, eager: true })
   items: OrderItem[];
 

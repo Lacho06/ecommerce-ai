@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { CurrenciesService } from '../currencies/currencies.service';
 import { Inventory } from '../inventory/inventory.entity';
 import { PayformsService } from '../payforms/payforms.service';
 import { Product } from '../products/product.entity';
@@ -31,6 +32,7 @@ export class OrdersService {
     @InjectRepository(Inventory)
     private readonly inventoryRepo: Repository<Inventory>,
     private readonly payformsService: PayformsService,
+    private readonly currenciesService: CurrenciesService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -49,6 +51,12 @@ export class OrdersService {
       );
     }
 
+    // Resolve the order currency and base currency
+    const baseCurrency = await this.currenciesService.findDefault();
+    const orderCurrency = dto.currencyId
+      ? await this.currenciesService.findCurrency(dto.currencyId)
+      : baseCurrency;
+
     return this.dataSource.transaction(async (manager) => {
       // Resolve products and validate inventory
       const resolvedItems: {
@@ -60,7 +68,7 @@ export class OrdersService {
       for (const itemDto of dto.items) {
         const product = await manager.findOne(Product, {
           where: { id: itemDto.productId },
-          relations: ['inventory'],
+          relations: ['inventory', 'currency'],
         });
         if (!product)
           throw new NotFoundException(`Product ${itemDto.productId} not found`);
@@ -80,16 +88,46 @@ export class OrdersService {
         });
       }
 
-      // Build order items with price snapshot
-      const orderItems = resolvedItems.map(({ product, quantity }) => {
+      // Build order items with price + currency snapshot
+      const orderItems: OrderItem[] = [];
+      for (const { product, quantity } of resolvedItems) {
         const item = new OrderItem();
         item.product = product;
         item.productName = product.name;
         item.productSku = product.sku;
-        item.unitPrice = Number(product.salePrice ?? product.basePrice);
+        item.currencyCode = product.currency.code;
+        item.currencyName = product.currency.name;
+        item.currencySymbol = product.currency.symbol;
+        item.baseCurrencyCode = baseCurrency.code;
+        item.baseCurrencySymbol = baseCurrency.symbol;
+
+        // Exchange rate: product currency → base currency
+        if (product.currency.code === baseCurrency.code) {
+          item.exchangeRate = 1;
+        } else {
+          const rateEntity = await this.currenciesService.getLatestRate(
+            product.currency.code,
+            baseCurrency.code,
+          );
+          item.exchangeRate = Number(rateEntity.rate);
+        }
+
+        // Convert price to order currency if different
+        const rawPrice = Number(product.salePrice ?? product.basePrice);
+        if (product.currency.code === orderCurrency.code) {
+          item.unitPrice = rawPrice;
+        } else {
+          const { converted } = await this.currenciesService.convert(
+            product.currency.code,
+            orderCurrency.code,
+            rawPrice,
+          );
+          item.unitPrice = converted;
+        }
+
         item.quantity = quantity;
-        return item;
-      });
+        orderItems.push(item);
+      }
 
       // Calculate totals
       const subtotal = orderItems.reduce(
@@ -111,6 +149,9 @@ export class OrdersService {
         tax,
         total,
         notes: dto.notes ?? null,
+        currencyCode: orderCurrency.code,
+        currencyName: orderCurrency.name,
+        currencySymbol: orderCurrency.symbol,
         items: orderItems,
       });
 

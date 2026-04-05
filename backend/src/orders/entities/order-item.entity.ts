@@ -30,6 +30,24 @@ export class OrderItem {
   @Column({ name: 'unit_price', type: 'numeric', precision: 10, scale: 2 })
   unitPrice: number;
 
+  @Column({ name: 'currency_code', length: 3 })
+  currencyCode: string;
+
+  @Column({ name: 'currency_name' })
+  currencyName: string;
+
+  @Column({ name: 'currency_symbol', length: 5 })
+  currencySymbol: string;
+
+  @Column({ name: 'base_currency_code', length: 3 })
+  baseCurrencyCode: string;
+
+  @Column({ name: 'base_currency_symbol', length: 5 })
+  baseCurrencySymbol: string;
+
+  @Column({ name: 'exchange_rate', type: 'numeric', precision: 18, scale: 8, default: 1 })
+  exchangeRate: number;
+
   @Column({ type: 'int', default: 1 })
   quantity: number;
 }

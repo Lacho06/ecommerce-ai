@@ -57,6 +57,13 @@ export class CurrenciesService {
     return currency;
   }
 
+  async findDefault(): Promise<Currency> {
+    const currency = await this.currencyRepo.findOneBy({ isDefault: true });
+    if (!currency)
+      throw new NotFoundException('No hay moneda por defecto configurada');
+    return currency;
+  }
+
   async toggleActive(id: string): Promise<Currency> {
     const currency = await this.findCurrency(id);
     currency.isActive = !currency.isActive;

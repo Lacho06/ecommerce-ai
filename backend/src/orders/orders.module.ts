@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CurrenciesModule } from '../currencies/currencies.module';
 import { Inventory } from '../inventory/inventory.entity';
 import { PayformsModule } from '../payforms/payforms.module';
 import { Product } from '../products/product.entity';
@@ -23,6 +24,7 @@ import { OrdersService } from './orders.service';
       Inventory,
     ]),
     PayformsModule,
+    CurrenciesModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

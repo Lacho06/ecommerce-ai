@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { CurrenciesService } from '../currencies/currencies.service';
 import { Inventory } from '../inventory/inventory.entity';
 import { Tag } from '../tags/tag.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -22,6 +23,7 @@ export class ProductsService {
     private readonly tagRepo: Repository<Tag>,
     @InjectRepository(Inventory)
     private readonly inventoryRepo: Repository<Inventory>,
+    private readonly currenciesService: CurrenciesService,
   ) {}
 
   private async findOrCreateCategory(name: string): Promise<Category> {
@@ -47,10 +49,15 @@ export class ProductsService {
     const existing = await this.productRepo.findOneBy({ sku: dto.sku });
     if (existing) throw new ConflictException(`El SKU '${dto.sku}' ya existe`);
 
+    const currency = dto.currencyId
+      ? await this.currenciesService.findCurrency(dto.currencyId)
+      : await this.currenciesService.findDefault();
+
     const product = this.productRepo.create({
       name: dto.name,
       sku: dto.sku,
       brand: dto.brand,
+      currency,
       basePrice: dto.basePrice,
       salePrice: dto.salePrice ?? null,
       dynamicPricing: dto.dynamicPricing ?? false,

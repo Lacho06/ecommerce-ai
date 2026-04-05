@@ -2,13 +2,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { Currency } from '../currencies/currency.entity';
 import { Inventory } from '../inventory/inventory.entity';
 import { Tag } from '../tags/tag.entity';
 
@@ -25,6 +28,10 @@ export class Product {
 
   @Column()
   brand: string;
+
+  @ManyToOne(() => Currency, { eager: true, onDelete: 'RESTRICT', nullable: false })
+  @JoinColumn({ name: 'currency_id' })
+  currency: Currency;
 
   @Column({ type: 'numeric', precision: 10, scale: 2 })
   basePrice: number;

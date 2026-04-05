@@ -60,6 +60,10 @@ export class CreateOrderDto {
   payformId: string;
 
   @IsOptional()
+  @IsUUID()
+  currencyId?: string;
+
+  @IsOptional()
   @IsString()
   lastFour?: string;
 
