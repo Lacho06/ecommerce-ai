@@ -5,6 +5,9 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CartModule } from './cart/cart.module';
+import { Cart } from './cart/entities/cart.entity';
+import { CartItem } from './cart/entities/cart-item.entity';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { Category } from './categories/category.entity';
@@ -67,6 +70,7 @@ import { UsersModule } from './users/users.module';
         User, Product, Category, Tag, Inventory, Image,
         Order, OrderItem, OrderPayment, OrderShipping, OrderStatusHistory,
         Payform, UserAddress, Currency, ExchangeRate,
+        Cart, CartItem,
       ],
       synchronize: false, // solo desarrollo — en prod usar migraciones
     }),
@@ -81,6 +85,7 @@ import { UsersModule } from './users/users.module';
     PayformsModule,
     UserAddressesModule,
     CurrenciesModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

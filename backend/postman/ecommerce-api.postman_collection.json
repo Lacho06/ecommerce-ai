@@ -12,7 +12,9 @@
     { "key": "toCurrencyId", "value": "" },
     { "key": "productId", "value": "" },
     { "key": "payformId", "value": "" },
-    { "key": "orderId", "value": "" }
+    { "key": "orderId", "value": "" },
+    { "key": "guestToken", "value": "" },
+    { "key": "cartItemId", "value": "" }
   ],
   "item": [
     {
@@ -692,6 +694,230 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"confirmed\",\n  \"note\": \"Pago verificado\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "folder-cart",
+      "name": "Cart",
+      "item": [
+        {
+          "id": "req-cart-get",
+          "name": "Get Cart (Auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "id": "req-cart-get-guest",
+          "name": "Get Cart (Guest)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Guest-Token", "value": "{{guestToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "id": "req-cart-add-item",
+          "name": "Add Item (Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.items && res.items.length > 0) {",
+                  "  const last = res.items[res.items.length - 1];",
+                  "  pm.collectionVariables.set('cartItemId', last.id);",
+                  "  console.log('cartItemId guardado:', last.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "id": "req-cart-add-item-guest",
+          "name": "Add Item (Guest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.guestToken) {",
+                  "  pm.collectionVariables.set('guestToken', res.guestToken);",
+                  "  console.log('guestToken guardado:', res.guestToken);",
+                  "}",
+                  "if (res.items && res.items.length > 0) {",
+                  "  const last = res.items[res.items.length - 1];",
+                  "  pm.collectionVariables.set('cartItemId', last.id);",
+                  "  console.log('cartItemId guardado:', last.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+        {
+          "id": "req-cart-update-item",
+          "name": "Update Item Quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items", ":itemId"],
+              "variable": [{ "key": "itemId", "value": "{{cartItemId}}" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            }
+          }
+        },
+        {
+          "id": "req-cart-remove-item",
+          "name": "Remove Item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items", ":itemId"],
+              "variable": [{ "key": "itemId", "value": "{{cartItemId}}" }]
+            }
+          }
+        },
+        {
+          "id": "req-cart-clear",
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "id": "req-cart-clear-guest",
+          "name": "Clear Cart (Guest)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [{ "key": "X-Guest-Token", "value": "{{guestToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "id": "req-cart-merge",
+          "name": "Merge Guest Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/merge",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "merge"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestToken\": \"{{guestToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "id": "req-cart-checkout",
+          "name": "Checkout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('orderId', res.id);",
+                  "  console.log('orderId guardado:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "checkout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payformId\": \"{{payformId}}\",\n  \"currencyId\": \"{{currencyId}}\",\n  \"lastFour\": \"4242\",\n  \"shipping\": {\n    \"recipientName\": \"Juan Pérez\",\n    \"street\": \"Av. de la Reforma 222, Torre A, Piso 10\",\n    \"city\": \"Cuauhtémoc\",\n    \"state\": \"CDMX\",\n    \"postalCode\": \"06600\",\n    \"country\": \"MX\",\n    \"phone\": \"+52 55 1234 5678\",\n    \"shippingMethod\": \"standard\"\n  },\n  \"shippingCost\": 0,\n  \"tax\": 0,\n  \"notes\": \"Desde el carrito\"\n}"
             }
           }
         }
