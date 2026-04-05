@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Currency } from './currency.entity';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
@@ -88,7 +88,17 @@ export class CurrenciesService {
       rate: dto.rate,
       effectiveDate: dto.effectiveDate,
     });
-    return this.rateRepo.save(rate);
+
+    try {
+      return await this.rateRepo.save(rate);
+    } catch (err) {
+      if (err instanceof QueryFailedError && (err as any).code === '23505') {
+        throw new ConflictException(
+          `Ya existe una tasa de cambio para ${from.code} → ${to.code} en la fecha ${dto.effectiveDate}`,
+        );
+      }
+      throw err;
+    }
   }
 
   async getLatestRate(fromCode: string, toCode: string): Promise<ExchangeRate> {
