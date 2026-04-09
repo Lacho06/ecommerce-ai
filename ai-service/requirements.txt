@@ -1,2 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
+httpx
+pymilvus>=2.3.0
+sentence-transformers
+google-generativeai
+groq
+redis
+pydantic-settings
+python-multipart
+Pillow
